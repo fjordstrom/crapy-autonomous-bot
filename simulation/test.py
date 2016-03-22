@@ -27,17 +27,11 @@ keyboard.properties(Speed=3.0)
 atrv.append(keyboard)
 
 
+# light = Light()
+# light.properties(distance=100.0, energy=2.0)
+# light.translate(z=0.7, x=0.5)
+# atrv.append(light)
 
-
-
-
-# camera = VideoCamera()
-# camera.properties(cam_width=512, cam_height=512)
-# camera.translate(z=0.7, y=0.1, x=0.5)
-# atrv.append(camera)
-
-
-# camera.add_stream('yarp')
 
 env = Environment('./indoor_scene.blend')
 env.set_camera_location([5, -5, 6])
