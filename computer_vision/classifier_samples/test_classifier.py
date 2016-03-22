@@ -26,9 +26,24 @@ yarp_image.setExternal(imageLeft, imageLeft.shape[1], imageLeft.shape[0])
 
 
 import cv2
+import os
 
-cascade = cv2.CascadeClassifier('./classifier/cascade.xml')
 
+classifier_dirs = os.listdir("./classifiers")
+
+colorPixHSV = np.array([[[0,255,255]]], dtype=np.uint8)
+colorIncrement = 180 / len(classifier_dirs) if len(classifier_dirs) else 1
+
+classifiers = []
+for dirc in classifier_dirs:
+	name = dirc
+	clasf = cv2.CascadeClassifier('./classifiers/'+dirc+'/cascade.xml')
+
+	temp = cv2.cvtColor(colorPixHSV, cv2.COLOR_HSV2BGR)
+	color = tuple(map(int,temp[0][0]))
+	colorPixHSV[0][0][0] += colorIncrement
+
+	classifiers.append((name, color, clasf))
 
 
 while True:
@@ -41,11 +56,15 @@ while True:
 
 	gray = cv2.cvtColor(test, cv2.COLOR_BGR2GRAY)
 
-	stuff = cascade.detectMultiScale(gray, scaleFactor=1.3, \
-		minNeighbors=100 \
-		)
-	for (x,y,w,h) in stuff:
-		cv2.rectangle(test, (x,y), (x+w, y+h), (255,0,0), 2)
+
+	for (name, color, cascade) in classifiers:
+		stuff = cascade.detectMultiScale(gray, scaleFactor=1.1, \
+			  minNeighbors=500 \
+			)
+
+		for (x,y,w,h) in stuff:
+			cv2.rectangle(test, (x,y), (x+w, y+h), color, 2)
+			cv2.putText(test, name, (x,y), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
 
 
 	cv2.imshow("dd", test)
