@@ -84,7 +84,7 @@ while True:
 
 	if startCamTrack:
 		trackWindow = getRect(pointA, pointB)
-		if trackWindow[2]>10 and trackWindow[3]>10:
+		if trackWindow[2]>0 and trackWindow[3]>0:
 			windowHistogram = getHistByWindow(test, trackWindow)
 
 			
@@ -99,12 +99,22 @@ while True:
 		#apply meanshift
 		ret, trackWindow = cv2.CamShift(dst, trackWindow, termination_criteria)
 
+		if trackWindow[0]+trackWindow[2]==0 or trackWindow[1]+trackWindow[3]==0:
+			print("Lost camtrack!")
+			camTrack = False
+			pointA = None
+			pointB = None
+		else:
+			#draw it
+			pts = sbp.boxPoints(ret)
+			pts = np.int0(pts)
+			cv2.polylines(test, [pts], isClosed=True, color=(255,0,0), thickness=2)
 
-		#draw it
-		pts = sbp.boxPoints(ret)
-		pts = np.int0(pts)
-		cv2.polylines(test, [pts], isClosed=True, color=(255,0,0), thickness=2)
-
+			cent = ret[0]
+			sze = ret[1]
+			pA = map(int, (cent[0]-sze[0]/2, cent[1]-sze[1]/2))
+			pB = map(int, (cent[0]+sze[0]/2, cent[1]+sze[1]/2))
+			cv2.rectangle(test, (pA[0], pA[1]), (pB[0], pB[1]), (0, 0, 255), 2)
 
 	cv2.imshow(viewportName, test)
 
