@@ -2,3 +2,4 @@ computer_vision/calibrations/*
 computer_vision/classifier_samples/actual_samples/*
 computer_vision/classifier_samples/classifiers/*
 computer_vision/classifier_samples/vector_files/*
+*.pyc
