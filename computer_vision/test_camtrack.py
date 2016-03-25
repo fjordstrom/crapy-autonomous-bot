@@ -7,23 +7,6 @@ import numpy as np
 import MockCameraHandler as ch
 
 
-def getRect(A,B):
-	if(A[0] > B[0]):
-		c = B[0]
-		w = A[0] - B[0]
-	else:
-		c = A[0]
-		w = B[0] - A[0]
-
-	if(A[1] > B[1]):
-		r = B[1]
-		h = A[1] - B[1]
-	else:
-		r = A[1]
-		h = B[1] - A[1]
-
-	return (c,r,w,h)
-
 
 trackWindow = None
 windowHistogram = None
@@ -52,18 +35,10 @@ def eventCallback(event, x, y, flags, param):
 			pointB = (x,y)
 
 
-def getHistByWindow(image, window):
-	(c,r,w,h) = window
-	roi = image[r:r+h, c:c+w]
-	hsv_roi =  cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
-	mask = cv2.inRange(hsv_roi, np.array((0., 60.,32.)), np.array((180.,255.,255.))) #check this step
-	roi_hist = cv2.calcHist([hsv_roi],[0],mask,[180],[0,180])
-	cv2.normalize(roi_hist,roi_hist,0,255,cv2.NORM_MINMAX)
-
-	return roi_hist
 
 
 import SurrogateBoxPoints as sbp
+import VisionTools as vt
 
 
 termination_criteria = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1 )
@@ -74,18 +49,22 @@ viewportName = "Viewport - click and drag to make a track bracket"
 cv2.namedWindow(viewportName)
 cv2.setMouseCallback(viewportName, eventCallback)
 
+isCaptureOn = False
+captureDir = "./classifier_samples/actual_samples/screenshot"
+
 while True:
 	ch.grabFrames()
 	test = ch.imageLeft
+	clean = np.copy(ch.imageLeft)
 
 
 	if pointA != None and pointB != None and not camTrack:
 			cv2.rectangle(test, pointA, pointB, (255, 0, 0), 2)
 
 	if startCamTrack:
-		trackWindow = getRect(pointA, pointB)
+		trackWindow = vt.getRect(pointA, pointB)
 		if trackWindow[2]>0 and trackWindow[3]>0:
-			windowHistogram = getHistByWindow(test, trackWindow)
+			windowHistogram = vt.getHistByWindow(test, trackWindow)
 
 			
 			camTrack = True
@@ -116,7 +95,15 @@ while True:
 			pB = map(int, (cent[0]+sze[0]/2, cent[1]+sze[1]/2))
 			cv2.rectangle(test, (pA[0], pA[1]), (pB[0], pB[1]), (0, 0, 255), 2)
 
+
+			if isCaptureOn:
+				vt.captureScreenshot(clean, captureDir, vt.scaleROI( vt.getRect(pA, pB), 1.2, 1.2 ) )
+
 	cv2.imshow(viewportName, test)
+
+	if cv2.waitKey(1) & 0xFF == ord('c'):
+		isCaptureOn = not isCaptureOn
+		print("Capture is {}".format(isCaptureOn) )
 
 	if cv2.waitKey(1) & 0xFF == ord('q'):
 		break
